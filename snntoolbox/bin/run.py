@@ -28,8 +28,8 @@ def main(filepath=None):
 
     if filepath is not None:
         config = update_setup(filepath)
-        run_pipeline(config)
-        return
+        results = run_pipeline(config)
+        return results
 
     parser = argparse.ArgumentParser(
         description='Run SNN toolbox to convert an analog neural network into '
@@ -46,7 +46,8 @@ def main(filepath=None):
         config = update_setup(_filepath)
 
         if args.terminal:
-            run_pipeline(config)
+            results = run_pipeline(config)
+            return results
         else:
             from snntoolbox.bin.gui import gui
             gui.main()

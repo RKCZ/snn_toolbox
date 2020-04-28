@@ -748,7 +748,7 @@ class AbstractModelParser:
         # Optimizer and loss do not matter because we only do inference.
         self.parsed_model.compile(
             'sgd', 'categorical_crossentropy',
-            ['accuracy', keras.metrics.top_k_categorical_accuracy])
+            ['accuracy', self.input_model.metrics])
         # Todo: Enable adding custom metric via self.input_model.metrics.
         self.parsed_model.summary()
         return self.parsed_model
@@ -1409,7 +1409,11 @@ def get_custom_activations_dict(filepath=None):
         activation_str: activation,
         'Noisy_Softplus': NoisySoftplus,
         'precision': precision,
-        'activity_regularizer': keras.regularizers.l1}
+        'activity_regularizer': keras.regularizers.l1,
+        'keras_precision': keras.metrics.precision,
+        'keras_recall': keras.metrics.recall,
+        'keras_auc': keras.metrics.AUC
+    }
 
     if filepath is not None and filepath != '':
         import json

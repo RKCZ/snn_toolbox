@@ -562,6 +562,11 @@ class AbstractSNN:
                 eval(self.config.get('input', 'label_dict')))
             data_batch_kwargs['dvs_gen'] = dvs_gen
 
+        # hardcoded custom metrics
+        auc = keras.metrics.AUC()
+        precision = keras.metrics.Precision()
+        recall = keras.metrics.Recall()
+
         # Simulate the SNN on a batch of samples in parallel.
         for batch_idx in range(num_batches):
 
@@ -628,10 +633,20 @@ class AbstractSNN:
             top5score_moving += sum(in_top_k(output_b_l_t[:, :, -1], truth_b,
                                              self.top_k))
             top5acc_moving = top5score_moving / num_samples_seen
+
+            # hardcoded evaluation of custom metrics
+            auc.update_state(y_true=keras.backend.constant(truth_d), y_pred=keras.backend.constant(guesses_d))
+            precision.update_state(y_true=keras.backend.constant(truth_d), y_pred=keras.backend.constant(guesses_d))
+            recall.update_state(y_true=keras.backend.constant(truth_d), y_pred=keras.backend.constant(guesses_d))
+            auc_moving = keras.backend.get_value(auc.result())
+            precision_moving = keras.backend.get_value(precision.result())
+            recall_moving = keras.backend.get_value(recall.result())
             print("\nBatch {} of {} completed ({:.1%})".format(
                 batch_idx + 1, num_batches, (batch_idx + 1) / num_batches))
             print("Moving accuracy of SNN (top-1, top-{}): {:.2%}, {:.2%}."
                   "".format(self.top_k, top1acc_moving, top5acc_moving))
+            print("Moving custom metrics (AUC, recall, precision): {}, {}, {}"
+                  .format(auc_moving, recall_moving, precision_moving))
             with open(path_acc, str('a')) as f_acc:
                 f_acc.write(str("{} {:.2%} {:.2%}\n".format(
                     num_samples_seen, top1acc_moving, top5acc_moving)))
@@ -759,7 +774,7 @@ class AbstractSNN:
         if self.batch_size != self._batch_size:
             self.config.set('simulation', 'batch_size', str(self._batch_size))
 
-        return top1acc_total
+        return (top1acc_total, auc.result(), recall.result(), precision.result())
 
     def setup_layers(self, batch_shape):
         """Iterates over all layers to instantiate them in the simulator"""

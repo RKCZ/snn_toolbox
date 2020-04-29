@@ -1410,9 +1410,9 @@ def get_custom_activations_dict(filepath=None):
         'Noisy_Softplus': NoisySoftplus,
         'precision': precision,
         'activity_regularizer': keras.regularizers.l1,
-        'keras_precision': keras.metrics.precision,
-        'keras_recall': keras.metrics.recall,
-        'keras_auc': keras.metrics.AUC
+        'precision': prec,
+        'recall': recall,
+        'auc': auc
     }
 
     if filepath is not None and filepath != '':
@@ -1442,6 +1442,20 @@ def check_for_custom_activations(layer_attributes):
     if 'activation' not in layer_attributes.keys():
         return
 
+def auc(y_true, y_pred):
+  auc = keras.metrics.AUC()
+  auc.update_state(y_true, y_pred)
+  return auc.result().numpy()
+
+def recall(y_true, y_pred):
+  recall = keras.metrics.Recall()
+  recall.update_state(y_true, y_pred)
+  return recall.result().numpy()  
+
+def prec(y_true, y_pred):
+  prec = keras.metrics.Precision()
+  prec.update_state(y_true, y_pred)
+  return prec.result().numpy()
 
 def precision(y_true, y_pred):
     """Precision metric.

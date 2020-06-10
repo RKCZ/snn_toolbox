@@ -523,6 +523,9 @@ class AbstractSNN:
         truth_d = []  # Filled up with correct classes of all test samples.
         guesses_d = []  # Filled up with guessed classes of all test samples.
 
+        # Variable for storing cumulative batch run time
+        time_per_batch_sum = 0
+
         # Prepare files for storage of logging quantities.
         path_log_vars = os.path.join(log_dir, 'log_vars')
         if not os.path.isdir(path_log_vars):
@@ -594,7 +597,12 @@ class AbstractSNN:
             # Main step: Run the network on a batch of samples for the duration
             # of the simulation.
             print("\nStarting new simulation...\n")
-            output_b_l_t = self.simulate(**data_batch_kwargs)
+            import time
+            start_time = time.time()
+            output_b_l_t = self.simulate(**data_batch_kwargs)            
+            end_time = time.time()
+            time_per_batch = end_time - start_time
+            time_per_batch_sum += time_per_batch
 
             # Halt if model is to be serialised only.
             if self.config.getboolean('tools', 'serialise_only'):
@@ -758,6 +766,10 @@ class AbstractSNN:
         # If batch_size was modified, change back to original value now.
         if self.batch_size != self._batch_size:
             self.config.set('simulation', 'batch_size', str(self._batch_size))
+
+        print("Wall time of simulation: {}\n".format(time_per_batch_sum))
+        from snntoolbox.bin.utils import TimeCounter
+        TimeCounter.times.append(time_per_batch_sum)
 
         return top1acc_total
 

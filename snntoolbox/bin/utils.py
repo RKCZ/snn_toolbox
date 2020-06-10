@@ -23,6 +23,11 @@ from future import standard_library
 
 standard_library.install_aliases()
 
+class TimeCounter:
+  """Counts time of simulation."""
+
+  times = []
+
 
 def run_pipeline(config, queue=None):
     """Convert an analog network to a spiking network and simulate it.
